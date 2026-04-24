@@ -190,7 +190,7 @@ void sumCorrectionToInsideSolution(cached_vector<cufftComplex4> &correction,
   System::log<System::DEBUG>("before sum");
   thrust::transform(thrust::cuda::par.on(st), insideSolution.begin(),
                     insideSolution.end(), correction.begin(),
-                    insideSolution.begin(), AddComplex4());
+                    insideSolution.begin(), thrust::plus<cufftComplex4>());
   System::log<System::DEBUG>("after sum");
 }
 
