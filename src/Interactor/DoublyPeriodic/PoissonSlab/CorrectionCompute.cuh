@@ -171,14 +171,27 @@ __global__ void scaleFFTToForwardChebyshevTransform(cufftComplex2 *signal,
 }
 
 } // namespace detail
+struct AddComplex4 {
+  __host__ __device__ cufftComplex4 operator()(const cufftComplex4 &a,
+                                               const cufftComplex4 &b) const {
+    cufftComplex4 r;
+    r.x = a.x + b.x;
+    r.y = a.y + b.y;
+    r.z = a.z + b.z;
+    r.w = a.w + b.w;
+    return r;
+  }
+};
 
 void sumCorrectionToInsideSolution(cached_vector<cufftComplex4> &correction,
                                    cached_vector<cufftComplex4> &insideSolution,
                                    cudaStream_t st) {
   System::log<System::DEBUG>("Sum correction to solution");
+  System::log<System::DEBUG>("before sum");
   thrust::transform(thrust::cuda::par.on(st), insideSolution.begin(),
                     insideSolution.end(), correction.begin(),
-                    insideSolution.begin(), cuda::std::plus<cufftComplex4>());
+                    insideSolution.begin(), AddComplex4());
+  System::log<System::DEBUG>("after sum");
 }
 
 __global__ void
