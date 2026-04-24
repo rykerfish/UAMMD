@@ -187,7 +187,7 @@ void sumCorrectionToInsideSolution(cached_vector<cufftComplex4> &correction,
                                    cached_vector<cufftComplex4> &insideSolution,
                                    cudaStream_t st) {
   System::log<System::DEBUG>("Sum correction to solution");
-  System::log<System::DEBUG>("before sum");
+  System::log<System::DEBUG>("before sum w/o stream sync");
   thrust::transform(thrust::device, insideSolution.begin(),
                     insideSolution.end(), correction.begin(),
                     insideSolution.begin(), thrust::plus<cufftComplex4>());
