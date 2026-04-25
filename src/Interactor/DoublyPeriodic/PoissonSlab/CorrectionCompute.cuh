@@ -171,15 +171,15 @@ __global__ void scaleFFTToForwardChebyshevTransform(cufftComplex2 *signal,
 }
 
 } // namespace detail
-struct AddComplex4 {
+struct ComplexAdd {
   __host__ __device__ cufftComplex4 operator()(const cufftComplex4 &a,
                                                const cufftComplex4 &b) const {
-    cufftComplex4 r;
-    r.x = a.x + b.x;
-    r.y = a.y + b.y;
-    r.z = a.z + b.z;
-    r.w = a.w + b.w;
-    return r;
+    cufftComplex4 result;
+    result.x = {a.x.x + b.x.x, a.x.y + b.x.y};
+    result.y = {a.y.x + b.y.x, a.y.y + b.y.y};
+    result.z = {a.z.x + b.z.x, a.z.y + b.z.y};
+    result.w = {a.w.x + b.w.x, a.w.y + b.w.y};
+    return result;
   }
 };
 
@@ -190,7 +190,7 @@ void sumCorrectionToInsideSolution(cached_vector<cufftComplex4> &correction,
   System::log<System::DEBUG>("before sum w/o stream sync");
   thrust::transform(thrust::device, insideSolution.begin(),
                     insideSolution.end(), correction.begin(),
-                    insideSolution.begin(), thrust::plus<cufftComplex4>());
+                    insideSolution.begin(), ComplexAdd());
   System::log<System::DEBUG>("after sum");
 }
 
