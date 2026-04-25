@@ -171,27 +171,27 @@ __global__ void scaleFFTToForwardChebyshevTransform(cufftComplex2 *signal,
 }
 
 } // namespace detail
-struct ComplexAdd {
-  __host__ __device__ cufftComplex4 operator()(const cufftComplex4 &a,
-                                               const cufftComplex4 &b) const {
-    cufftComplex4 result;
-    result.x = {a.x.x + b.x.x, a.x.y + b.x.y};
-    result.y = {a.y.x + b.y.x, a.y.y + b.y.y};
-    result.z = {a.z.x + b.z.x, a.z.y + b.z.y};
-    result.w = {a.w.x + b.w.x, a.w.y + b.w.y};
-    return result;
+__global__ void addComplexKernel(cufftComplex4 *a, const cufftComplex4 *b,
+                                 int n) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i < n) {
+    a[i].x.x += b[i].x.x;
+    a[i].x.y += b[i].x.y;
+    a[i].y.x += b[i].y.x;
+    a[i].y.y += b[i].y.y;
+    a[i].z.x += b[i].z.x;
+    a[i].z.y += b[i].z.y;
+    a[i].w.x += b[i].w.x;
+    a[i].w.y += b[i].w.y;
   }
-};
+}
 
 void sumCorrectionToInsideSolution(cached_vector<cufftComplex4> &correction,
                                    cached_vector<cufftComplex4> &insideSolution,
                                    cudaStream_t st) {
-  System::log<System::DEBUG>("Sum correction to solution");
-  System::log<System::DEBUG>("no templated arg");
-  thrust::transform(thrust::device, insideSolution.begin(),
-                    insideSolution.end(), correction.begin(),
-                    insideSolution.begin(), ComplexAdd());
-  System::log<System::DEBUG>("after sum");
+  int n = insideSolution.size();
+  addComplexKernel<<<(n + 255) / 256, 256, 0, st>>>(insideSolution.data().get(),
+                                                    correction.data().get(), n);
 }
 
 __global__ void
